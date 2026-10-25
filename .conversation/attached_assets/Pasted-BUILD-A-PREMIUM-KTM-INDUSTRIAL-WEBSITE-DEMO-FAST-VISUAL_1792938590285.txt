@@ -1,0 +1,326 @@
+BUILD A PREMIUM KTM INDUSTRIAL WEBSITE DEMO — FAST, VISUAL-FIRST, NO AI-GENERATED IMAGES
+
+Act as a world-class industrial website designer, senior frontend developer, and animation specialist.
+
+Build a stunning, premium website redesign DEMO for KTM Technology & Innovation (India) Pvt. Ltd., a CNC machine and industrial engineering company.
+
+MOST IMPORTANT: FOLLOW THESE RULES
+
+1. Build a working website immediately. Prioritize getting a complete, beautiful preview running as quickly as possible.
+2. Do NOT generate images using AI, create image assets, or invoke any image-generation tool.
+3. Do NOT spend time researching or building an elaborate backend.
+4. Do NOT build complex functionality that is unnecessary for a client presentation.
+5. Do NOT implement actual 3D machine models yet. I will provide two existing HTML files containing the 3D models later.
+6. Create a clean, replaceable placeholder area for those two models.
+7. Do not install unnecessary dependencies, create complicated architecture, or rewrite the project from scratch if an existing setup already works.
+8. Do not stop after designing the hero section. Complete the entire single-page website.
+9. Start the application and make the live preview available as early as possible.
+10. Favor a visually excellent, complete website over excessive code, unnecessary features, or a complicated implementation.
+
+The priority is design quality, a working preview, smooth animations, and a convincing client presentation.
+
+1. VISUAL DIRECTION
+
+Create an expensive-looking industrial website inspired by premium international manufacturing and engineering brands.
+
+Design style:
+- Modern industrial minimalism.
+- Cinematic product presentation.
+- Premium editorial typography.
+- Clean, confident layouts.
+- Sophisticated motion design.
+- Strong visual hierarchy.
+- Beautiful whitespace and precise alignment.
+
+Color palette:
+- Deep charcoal: `#111416`
+- Graphite: `#202528`
+- White: `#FFFFFF`
+- Light grey: `#F3F5F5`
+- Industrial orange: `#F07835`
+- Muted metallic grey: `#A6AFB3`
+
+Use dark sections for cinematic machine presentations and light sections for company information and technical content.
+
+Use Inter or Manrope typography, subtle borders, refined shadows, generous spacing, and restrained orange accents.
+
+Avoid generic AI-generated website aesthetics, excessive glassmorphism, colorful gradients everywhere, unnecessary cards, oversized rounded containers, and childish animations.
+
+2. HEADER
+
+Build a clean, premium, sticky navigation bar.
+
+Left:
+KTM logo or a simple typographic KTM placeholder if the official logo is unavailable.
+
+Navigation:
+- Our Story
+- Products
+- Industries
+- Events
+- Presence
+- Clientele
+
+Right:
+- Contact
+- Request a Quote button
+
+Add smooth scrolling, working navigation links, and a clean mobile menu.
+
+3. HERO SECTION — MAKE IT IMPRESSIVE
+
+Create a cinematic, full-width hero that immediately communicates precision engineering.
+
+Eyebrow:
+PRECISION ENGINEERING · CNC TECHNOLOGY
+
+Headline:
+Engineered for Precision. Built for Performance.
+
+Supporting text:
+Advanced CNC machining solutions for demanding manufacturing applications. Explore precision engineering designed for industries that move the world.
+
+Buttons:
+- Explore Our Machines
+- Contact Sales
+
+On the right, create a large, elegant machine showcase area.
+
+IMPORTANT: This is where my future 3D models will go.
+
+For now:
+- Create a large dark graphite presentation stage.
+- Add subtle technical grid lines and restrained orange lighting accents.
+- Include an elegant machine silhouette using CSS shapes or an existing legitimate industrial machine photograph if readily available.
+- Keep the machine area visually dominant.
+- Add a small label: CYNIC 370 · CNC LINEAR TURNING MACHINE.
+- Add a subtle “Interactive 3D model coming soon” placeholder only if necessary.
+- Create a clearly identifiable component where I can later insert my first HTML-based 3D model.
+
+Do not create an image using AI. Do not spend time generating or downloading complicated assets.
+
+The hero must look polished even without the actual 3D model.
+
+4. SMOOTH ANIMATIONS
+
+Use CSS transitions and lightweight Framer Motion only if it is already available or can be used without unnecessary setup.
+
+Implement:
+- Smooth section entrance animations.
+- Subtle fade-up transitions.
+- Staggered product card reveals.
+- Elegant button hover animations.
+- Subtle image zoom on hover.
+- Smooth navigation scrolling.
+- Refined page-load entrance.
+- Small arrow and icon movements.
+- Restrained background movement in the hero.
+
+Animations should feel premium, fast, and natural.
+
+Use short durations, generally around 200–600 ms for interface interactions.
+
+Do not animate every element. Avoid heavy parallax, constant spinning, complex 3D effects, and scroll-jacking.
+
+Respect reduced-motion accessibility preferences.
+
+5. FEATURED MACHINES
+
+Create a visually excellent product section titled:
+
+Explore Our Machines
+
+Supporting text:
+Discover precision-engineered CNC solutions for modern manufacturing.
+
+Show three product cards:
+
+CYNIC 370
+CNC Linear Turning Machine.
+
+JUNIOR 370
+CNC Linear Turning Machine.
+
+RIG 600
+CNC machining product. Use verified category information if available.
+
+Each card should include:
+- A prominent machine visual or elegant CSS placeholder.
+- Product name.
+- Product category.
+- A short description.
+- An “Explore Machine” interaction.
+- A “Request a Quote” action.
+
+Use a sophisticated grid with premium image proportions, restrained hover animations, and excellent spacing.
+
+Make CYNIC 370 the flagship visual.
+
+Product buttons should open a simple product detail modal or navigate to the appropriate product section. Do not create complex routes unless needed.
+
+6. PREPARE TWO FUTURE 3D MODEL SLOTS
+
+This is a critical requirement.
+
+Create a reusable component named `MachineModelSlot` or an equivalent simple component.
+
+Prepare two independent model slots:
+
+- Model slot 1: CYNIC 370.
+- Model slot 2: JUNIOR 370.
+
+Each slot must have a dedicated container that can later host my supplied HTML-based 3D model.
+
+For now, use a premium visual placeholder.
+
+Keep the implementation simple and isolated so the model can be integrated later without redesigning the website.
+
+Important integration requirements:
+- Do not assume that the HTML files have already been uploaded.
+- Do not invent filenames or iframe URLs.
+- Do not create fake interactive 3D behavior.
+- Do not use an iframe pointing to a nonexistent page.
+- Keep the model container responsive.
+- Include a clearly marked comment in the code showing where the supplied HTML model will be integrated.
+- If the supplied HTML can be embedded directly, we will integrate it after I upload it.
+- If it requires an iframe, we will configure that after inspecting the files.
+
+Do not build a full Three.js viewer now. My supplied HTML models may already contain their own viewer and controls.
+
+7. TECHNICAL HIGHLIGHTS
+
+Create a clean, editorial section titled:
+
+Precision in Every Detail
+
+Display the following supplied standard features as concise technical highlights:
+
+- 45° true slant-bed construction.
+- C3-grade ball screws.
+- High-precision LM guideways.
+- Digital servo spindle motor.
+- High-speed rigid spindle.
+- Hydraulic power chuck.
+- Linear tooling system.
+- Automatic lubrication and coolant systems.
+
+Use elegant typography, small technical icons, and a clean layout.
+
+Do not invent specifications, numerical performance claims, tolerances, or certifications.
+
+8. INDUSTRIES
+
+Create a compact, premium section displaying:
+
+- Defence
+- Aerospace
+- Automobile
+- Oil & Gas
+- Medical
+- Pump & Valve
+- Die & Mould
+- Agriculture & Earth Movers
+- General Engineering
+
+Use a refined grid, small icons or simple visual elements, subtle hover effects, and concise labels.
+
+Do not make this section overly large.
+
+9. COMPANY INTRODUCTION
+
+Headline:
+Engineering Progress Through Precision
+
+Description:
+KTM Technology & Innovation delivers CNC machining solutions for a wide range of industrial applications, supported by engineering experience and a commitment to precision.
+
+Use the company-provided claim of 18+ years of experience only as supplied content that can be verified by the client.
+
+Create a premium split layout with text on one side and a restrained industrial visual on the other.
+
+10. CONTACT AND QUOTE FORM
+
+Create a high-converting enquiry section.
+
+Headline:
+Let's Build Something Precise.
+
+Supporting text:
+Connect with our team to discuss your machining requirements.
+
+Fields:
+- Name
+- Company
+- Email
+- Phone
+- Interested Machine
+- Message
+
+Buttons:
+- Submit Enquiry
+- Call Our Team
+
+Implement basic client-side form validation and a clear demo success message. Do not pretend the form sends an email or saves data to a backend.
+
+Use real contact links:
+
+Phone: +91 63573 00777
+Phone: +91 63573 00766
+Email: marketing@ktmtechno.com
+
+11. FOOTER
+
+Create a premium dark footer containing:
+
+- KTM branding.
+- Short company description.
+- Product links.
+- Industry links.
+- Contact details.
+- Opening hours: Monday–Saturday, 9:00 AM–6:00 PM.
+- A Request a Quote link.
+
+Keep it simple, polished, and functional.
+
+12. TECHNICAL IMPLEMENTATION
+
+Use the existing project framework.
+
+Prefer:
+- React.
+- TypeScript if already configured.
+- Tailwind CSS if already installed.
+- CSS animations.
+- Existing icon libraries if available.
+
+Do not add Three.js, a database, authentication, a backend server, or heavy dependencies just for this demo.
+
+Do not introduce unnecessary npm packages.
+
+Keep components reusable but avoid overengineering.
+
+Make all sections responsive for desktop, tablet, and mobile.
+
+Ensure the site has a working initial preview and no broken imports or missing assets.
+
+13. FINAL INSTRUCTIONS
+
+Build the complete single-page demo in one focused implementation.
+
+Priority order:
+
+1. Make the preview work.
+2. Deliver an outstanding hero section.
+3. Complete the full-page visual design.
+4. Add smooth, lightweight animations.
+5. Create the two replaceable 3D model slots.
+6. Make navigation and CTAs functional.
+7. Check responsiveness and fix visible errors.
+
+Do not generate images.
+Do not generate videos.
+Do not build the real 3D models yet.
+Do not build a complicated backend.
+Do not spend credits on unnecessary planning or excessive explanations.
+
+Start coding immediately. Deliver a beautiful, functioning, previewable website first. I will upload the two HTML 3D machine models in the next step for integration.

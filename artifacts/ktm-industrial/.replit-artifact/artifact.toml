@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "KTM Industrial Website Demo"
+description = "A premium, responsive website demo for KTM Technology & Innovation, showcasing CNC machines, engineering capabilities, industries served, and demo-only quote enquiry interactions."
+version = "1.0.0"
+id = "artifacts/ktm-industrial"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22465
+
+[services.development]
+run = "pnpm --filter @workspace/ktm-industrial run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ktm-industrial", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ktm-industrial/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22465"
+BASE_PATH = "/"
