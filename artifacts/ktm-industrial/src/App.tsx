@@ -43,6 +43,11 @@ const machines: Machine[] = [
   },
 ];
 
+const interactiveModels = [
+  { name: 'RIG 2000 T+', file: 'rig-2000-t-plus.html', number: '01', delay: '1' },
+  { name: 'ELPHIS 21090', file: 'elphis-21090.html', number: '02', delay: '2' },
+];
+
 const navItems = [
   ['Our Story', '#story'],
   ['Products', '#products'],
@@ -136,9 +141,43 @@ function MachineIllustration({ compact = false }: { compact?: boolean }) {
 function MachineModelSlot({ label }: { label: string }) {
   return (
     <div className="machine-art" aria-label={`${label} visual placeholder`}>
-      {/* Supplied HTML model will be integrated here when provided. */}
+      {/* CYNIC 370 and JUNIOR 370 remain placeholders until matching models are supplied. */}
       <MachineIllustration />
     </div>
+  );
+}
+
+function InteractiveMachineModel({
+  name,
+  file,
+  number,
+  delay,
+}: {
+  name: string;
+  file: string;
+  number: string;
+  delay: string;
+}) {
+  return (
+    <article className={`machine-model-card reveal delay-${delay}`}>
+      <div className="machine-model-heading">
+        <div>
+          <div className="eyebrow">Interactive model / {number}</div>
+          <h3>{name}</h3>
+        </div>
+        <span className="model-caption">360° product showcase</span>
+      </div>
+      <iframe
+        className="machine-model-frame"
+        title={`Interactive 3D model of ${name}`}
+        src={`${import.meta.env.BASE_URL}models/${file}`}
+        loading="lazy"
+        sandbox="allow-scripts"
+        referrerPolicy="no-referrer"
+      >
+        Your browser does not support embedded 3D previews.
+      </iframe>
+    </article>
   );
 }
 
@@ -297,6 +336,11 @@ function App() {
                 <h2 className="section-title">Explore Our Machines</h2>
               </div>
               <p className="section-intro">Discover precision-engineered CNC solutions for modern manufacturing.</p>
+            </div>
+            <div className="interactive-model-grid" aria-label="Interactive machine models">
+              {interactiveModels.map((model) => (
+                <InteractiveMachineModel key={model.file} {...model} />
+              ))}
             </div>
             <div className="product-grid">
               {machines.map((machine, index) => (

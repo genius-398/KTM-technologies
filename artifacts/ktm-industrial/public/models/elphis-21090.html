@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KTM ELPHIS 21090 — 360° 3D Product Showcase</title>
+  <style>
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: transparent;
+    }
+
+    /* Responsive Product Showcase Container */
+    #elphis-3d-showcase {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 42%, #ffffff 0%, #edf1f6 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+      user-select: none;
+    }
+
+    /* Top-left 360° Interactive Badge */
+    .showcase-badge {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(203, 213, 225, 0.7);
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: 0.4px;
+      pointer-events: none;
+    }
+
+    .showcase-badge span.dot {
+      width: 8px;
+      height: 8px;
+      background: #ea4315;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Floating Bottom Control Bar */
+    .showcase-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      background: rgba(30, 38, 46, 0.9);
+      backdrop-filter: blur(8px);
+      padding: 6px;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+    }
+
+    .showcase-btn {
+      background: transparent;
+      color: #f8fafc;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .showcase-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .showcase-btn.active {
+      background: #ea4315;
+      color: #ffffff;
+    }
+
+    @media (max-width: 390px) {
+      .showcase-controls { gap: 2px; padding: 4px; bottom: 12px; }
+      .showcase-btn { padding: 7px 9px; font-size: 10px; }
+      .showcase-badge { top: 10px; left: 10px; padding: 7px 10px; font-size: 10px; }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- WEBSITE PRODUCT SHOWCASE CONTAINER -->
+  <div id="elphis-3d-showcase">
+    <div class="showcase-badge">
+      <span class="dot"></span> KTM ELPHIS 21090 — 360° INTERACTIVE VIEW
+    </div>
+
+    <div class="showcase-controls">
+      <button id="btnDoors" class="showcase-btn">Open Doors</button>
+      <button id="btnRotate" class="showcase-btn active">Auto-Rotate: ON</button>
+      <button id="btnReset" class="showcase-btn">Reset View</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const container = document.getElementById('elphis-3d-showcase');
+
+    // --- SCENE, CAMERA, RENDERER ---
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      36,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      100
+    );
+    const defaultCamPos = new THREE.Vector3(6.8, 2.7, 6.4);
+    const defaultTarget = new THREE.Vector3(0.35, 1.15, 0);
+    camera.position.copy(defaultCamPos);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(defaultTarget);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 4.0;
+    controls.maxDistance = 14.0;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.1;
+
+    controls.addEventListener('start', () => {
+      if (controls.autoRotate) {
+        controls.autoRotate = false;
+        updateRotateButton();
+      }
+    });
+
+    // --- STUDIO LIGHTING ---
+    scene.add(new THREE.AmbientLight(0xffffff, 1.35));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.9);
+    keyLight.position.set(8, 12, 9);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -6;
+    keyLight.shadow.camera.right = 6;
+    keyLight.shadow.camera.top = 6;
+    keyLight.shadow.camera.bottom = -6;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xe0f2fe, 0.95);
+    fillLight.position.set(-8, 6, -7);
+    scene.add(fillLight);
+
+    // Interior Workbay Illumination
+    const bayLight = new THREE.PointLight(0xffffff, 1.6, 5);
+    bayLight.position.set(0, 1.95, 0);
+    scene.add(bayLight);
+
+    // Studio Shadow Floor
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.ShadowMaterial({ opacity: 0.16 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // --- PROCEDURAL DECAL TEXTURES MATCHED TO UPLOADED PHOTOS ---
+    // 1. Vertical Orange-Red "ELPHIS 21090" Corner Stripe
+    function createVerticalElphisTexture() {
+      const c = document.createElement('canvas');
+      c.width = 128; c.height = 1024;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#e6481e';
+      ctx.fillRect(0, 0, 128, 1024);
+
+      ctx.save();
+      ctx.translate(88, 920);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 52px Arial, sans-serif';
+      ctx.fillText('ELPHIS', 0, 0);
+      ctx.fillStyle = '#1e242b';
+      ctx.font = '900 68px Arial, sans-serif';
+      ctx.fillText('21090', 215, 4);
+      ctx.restore();
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // 2. Horizontal Orange-Red "ELPHIS 21090" Side End Banner
+    function createHorizontalElphisTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 96;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#e6481e';
+      ctx.fillRect(0, 0, 512, 96);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 42px Arial, sans-serif';
+      ctx.fillText('ELPHIS', 45, 64);
+      ctx.fillStyle = '#1e242b';
+      ctx.font = '900 48px Arial, sans-serif';
+      ctx.fillText('21090', 225, 66);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // 3. Blue KTM Star Logo on White Column Background
+    function createKTMLogoWhite() {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#f0eee9';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(175, 30);
+      ctx.lineTo(65, 135);
+      ctx.lineTo(125, 142);
+      ctx.lineTo(95, 225);
+      ctx.lineTo(195, 120);
+      ctx.lineTo(145, 112);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px Arial';
+      ctx.fillText('KTM', 98, 148);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // 4. CNC Operator Pendant Face Texture
+    function createPendantTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 640;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#3a434c';
+      ctx.fillRect(0, 0, 512, 640);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(8, 8, 496, 624);
+
+      // Top Left LCD Display
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(32, 32, 260, 210);
+      ctx.fillStyle = '#bae6fd';
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText('ELPHIS 21090 CNC', 46, 65);
+      ctx.fillText('X:  1450.000', 46, 105);
+      ctx.fillText('Y:   620.500', 46, 135);
+      ctx.fillText('Z:  -118.250', 46, 165);
+
+      // Top Right Keypad
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(310, 32, 170, 210);
+      for (let r = 0; r < 5; r++) {
+        for (let col = 0; col < 4; col++) {
+          ctx.fillStyle = (r === 4 && col === 3) ? '#ef4444' : '#cbd5e1';
+          ctx.fillRect(322 + col * 38, 46 + r * 38, 28, 26);
+        }
+      }
+
+      // Lower Operator Sub-panel
+      ctx.fillStyle = '#252d34';
+      ctx.fillRect(32, 270, 448, 330);
+      for (let r = 0; r < 5; r++) {
+        for (let col = 0; col < 8; col++) {
+          ctx.fillStyle = col === 0 ? '#22c55e' : (col === 7 ? '#f59e0b' : '#94a3b8');
+          ctx.fillRect(48 + col * 52, 295 + r * 45, 36, 28);
+        }
+      }
+      // Emergency Stop & MPG Dial
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath(); ctx.arc(110, 545, 28, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath(); ctx.arc(110, 545, 19, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath(); ctx.arc(380, 545, 34, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#334155';
+      ctx.beginPath(); ctx.arc(380, 545, 24, 0, Math.PI * 2); ctx.fill();
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // --- MATERIALS ---
+    const matWhite = new THREE.MeshStandardMaterial({ color: 0xf0eee9, roughness: 0.32, metalness: 0.08 });
+    const matInteriorWhite = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4, metalness: 0.1 });
+    const matDarkBase = new THREE.MeshStandardMaterial({ color: 0x38424b, roughness: 0.42, metalness: 0.18 });
+    const matDoorGrey = new THREE.MeshStandardMaterial({ color: 0x434f5b, roughness: 0.38, metalness: 0.22 });
+    const matCharcoal = new THREE.MeshStandardMaterial({ color: 0x262c32, roughness: 0.45, metalness: 0.3 });
+    const matStainless = new THREE.MeshStandardMaterial({ color: 0xc4c1b8, roughness: 0.24, metalness: 0.78 });
+    const matSteel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.2, metalness: 0.85 });
+    const matBlueHose = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.1 });
+    const matGlass = new THREE.MeshPhysicalMaterial({
+      color: 0xe0f2fe, transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, transmission: 0.65
+    });
+
+    const matVertStripe = new THREE.MeshStandardMaterial({ map: createVerticalElphisTexture(), roughness: 0.3 });
+    const matHorizBanner = new THREE.MeshStandardMaterial({ map: createHorizontalElphisTexture(), roughness: 0.3 });
+    const matKTMLogo = new THREE.MeshStandardMaterial({ map: createKTMLogoWhite(), roughness: 0.32 });
+    const matPendantFace = new THREE.MeshStandardMaterial({ map: createPendantTexture(), roughness: 0.3 });
+
+    // --- ROOT MACHINE ASSEMBLY ---
+    const machine = new THREE.Group();
+    scene.add(machine);
+
+    // 1. Full-Length Dark Slate-Grey Lower Base Skirt (Width: 4.8m, Height: 0.62m, Depth: 2.3m)
+    const baseBed = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.62, 2.3), matDarkBase);
+    baseBed.position.set(0, 0.33, 0);
+    baseBed.castShadow = true;
+    baseBed.receiveShadow = true;
+    machine.add(baseBed);
+
+    // Subtle leveling feet under the bed
+    const footGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.05, 16);
+    for (let fx = -2.2; fx <= 2.2; fx += 1.1) {
+      [-1.0, 1.0].forEach(fz => {
+        const foot = new THREE.Mesh(footGeo, matCharcoal);
+        foot.position.set(fx, 0.025, fz);
+        machine.add(foot);
+      });
+    }
+
+    // 2. Left & Right Full-Depth White End Enclosures + Front Columns
+    // Left End Enclosure Block
+    const leftBlock = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.55, 2.28), matWhite);
+    leftBlock.position.set(-1.825, 1.415, 0);
+    leftBlock.castShadow = true;
+    leftBlock.receiveShadow = true;
+    machine.add(leftBlock);
+
+    // Right End Enclosure Block
+    const rightBlock = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.55, 2.28), matWhite);
+    rightBlock.position.set(1.875, 1.415, 0);
+    rightBlock.castShadow = true;
+    rightBlock.receiveShadow = true;
+    machine.add(rightBlock);
+
+    // Vertical Orange-Red "ELPHIS 21090" Decal Stripe on Front-Left Corner
+    const vertStripe = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 1.42), matVertStripe);
+    vertStripe.position.set(-2.26, 1.415, 1.142);
+    machine.add(vertStripe);
+
+    // Blue KTM Logos on Left & Right Front Columns
+    const ktmFrontLeft = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.32), matKTMLogo);
+    ktmFrontLeft.position.set(-1.75, 1.88, 1.142);
+    machine.add(ktmFrontLeft);
+
+    const ktmFrontRight = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.32), matKTMLogo);
+    ktmFrontRight.position.set(1.82, 1.88, 1.142);
+    machine.add(ktmFrontRight);
+
+    // 3 Horizontal Recessed Ribbed Slots on Front White Columns (Left & Right)
+    [1.18, 1.38, 1.58].forEach(ry => {
+      // Left column wide recessed slots
+      const slotL = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.055, 0.03), matStainless);
+      slotL.position.set(-1.75, ry, 1.135);
+      machine.add(slotL);
+      const lipL = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.025, 0.045), matWhite);
+      lipL.position.set(-1.75, ry - 0.03, 1.145);
+      machine.add(lipL);
+
+      // Right column recessed slots
+      const slotR = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.055, 0.03), matStainless);
+      slotR.position.set(2.05, ry, 1.135);
+      machine.add(slotR);
+    });
+
+    // 3. Left & Right End-Wall Twin Windows + Top "ELPHIS 21090" Banners
+    function addEndWallDetails(isLeftEnd) {
+      const xPos = isLeftEnd ? -2.402 : 2.402;
+      const rotY = isLeftEnd ? -Math.PI / 2 : Math.PI / 2;
+      const sideGroup = new THREE.Group();
+      sideGroup.position.set(xPos, 0, 0);
+      sideGroup.rotation.y = rotY;
+
+      // Recessed double-window panel outline
+      const panelFrame = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.98, 0.02), matWhite);
+      panelFrame.position.set(0, 1.35, 0);
+      sideGroup.add(panelFrame);
+
+      // Twin Vertical Glass Windows
+      [-0.27, 0.27].forEach(wx => {
+        const winGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.68), matGlass);
+        winGlass.position.set(wx, 1.38, 0.015);
+        sideGroup.add(winGlass);
+
+        // Bright white backing inside window
+        const winBack = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.67), matInteriorWhite);
+        winBack.position.set(wx, 1.38, 0.005);
+        sideGroup.add(winBack);
+      });
+
+      // Top Horizontal Orange-Red "ELPHIS 21090" Banner
+      const banner = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.14), matHorizBanner);
+      banner.position.set(0, 2.0, 0.012);
+      sideGroup.add(banner);
+
+      // Corner Blue KTM Logo on Side Wall
+      const sideLogo = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), matKTMLogo);
+      sideLogo.position.set(isLeftEnd ? 0.78 : -0.78, 2.0, 0.012);
+      sideGroup.add(sideLogo);
+
+      machine.add(sideGroup);
+    }
+    addEndWallDetails(true);
+    addEndWallDetails(false);
+
+    // 4. Center Front Brushed Stainless Steel Apron & Hanging Blue Air Hoses
+    const centerApron = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.62, 0.08), matStainless);
+    centerApron.position.set(0.05, 0.95, 1.12);
+    centerApron.castShadow = true;
+    machine.add(centerApron);
+
+    // Top Guide Rail Bar Above Sliding Doors
+    const topRail = new THREE.Mesh(new THREE.BoxGeometry(2.65, 0.07, 0.12), matDoorGrey);
+    topRail.position.set(0.05, 2.15, 1.10);
+    machine.add(topRail);
+
+    // Two Blue Coiled Air Hoses Flanking the Stainless Apron
+    [-1.22, 1.32].forEach(hx => {
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.1), matSteel);
+      bracket.position.set(hx, 1.24, 1.15);
+      machine.add(bracket);
+
+      for (let c = 0; c < 8; c++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.009, 8, 16), matBlueHose);
+        ring.position.set(hx, 1.16 - c * 0.065, 1.16);
+        ring.rotation.x = 0.3;
+        machine.add(ring);
+      }
+    });
+
+    // 5. Interior Machining Bay (Visible When Doors Slide Open & From Top/Windows)
+    // Back Interior Wall with Twin Rear Windows
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(2.65, 1.55, 0.14), matInteriorWhite);
+    backWall.position.set(0.05, 1.415, -1.07);
+    machine.add(backWall);
+
+    [-0.55, 0.65].forEach(rx => {
+      const rearWinFrame = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.62, 0.16), matDoorGrey);
+      rearWinFrame.position.set(rx, 1.52, -1.07);
+      machine.add(rearWinFrame);
+      const rearWinIn = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.48, 0.17), matGlass);
+      rearWinIn.position.set(rx, 1.52, -1.07);
+      machine.add(rearWinIn);
+    });
+
+    // Interior Bed & CNC T-Slot Worktable
+    const interiorFloor = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 2.1), matDarkBase);
+    interiorFloor.position.set(0.05, 0.68, 0);
+    machine.add(interiorFloor);
+
+    const workTable = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.16, 0.95), matSteel);
+    workTable.position.set(0.05, 0.95, -0.05);
+    workTable.castShadow = true;
+    machine.add(workTable);
+
+    // T-Slots on Worktable
+    for (let tz = -0.35; tz <= 0.25; tz += 0.15) {
+      const slot = new THREE.Mesh(new THREE.BoxGeometry(2.16, 0.02, 0.02), matCharcoal);
+      slot.position.set(0.05, 1.035, tz);
+      machine.add(slot);
+    }
+
+    // Internal Vertical Spindle Headstock & Tool Holder
+    const spindleRam = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.95, 0.52), matDarkBase);
+    spindleRam.position.set(-0.2, 1.72, -0.25);
+    machine.add(spindleRam);
+
+    const spindleNose = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.24, 24), matSteel);
+    spindleNose.position.set(-0.2, 1.18, -0.25);
+    machine.add(spindleNose);
+
+    // 6. Double Sliding Front Doors (Slide Open Behind Front Columns)
+    function createSlidingDoor(isLeft) {
+      const dGroup = new THREE.Group();
+      const sign = isLeft ? -1 : 1;
+
+      // Top & Bottom Horizontal Door Frames
+      const topBar = new THREE.Mesh(new THREE.BoxGeometry(1.31, 0.18, 0.06), matDoorGrey);
+      topBar.position.set(0, 2.02, 1.06);
+      dGroup.add(topBar);
+
+      const botBar = new THREE.Mesh(new THREE.BoxGeometry(1.31, 0.22, 0.06), matDoorGrey);
+      botBar.position.set(0, 1.36, 1.06);
+      dGroup.add(botBar);
+
+      // Left & Right Vertical Stiles
+      const outerStile = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.48, 0.06), matDoorGrey);
+      outerStile.position.set(sign * 0.565, 1.71, 1.06);
+      dGroup.add(outerStile);
+
+      const innerStile = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.48, 0.06), matDoorGrey);
+      innerStile.position.set(-sign * 0.575, 1.71, 1.06);
+      dGroup.add(innerStile);
+
+      // Large Safety Glass Window
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.48, 0.02), matGlass);
+      glass.position.set(-sign * 0.005, 1.71, 1.06);
+      dGroup.add(glass);
+
+      // Vertical Black Door Pull Handle
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.24, 0.04), matCharcoal);
+      handle.position.set(-sign * 0.54, 1.71, 1.095);
+      dGroup.add(handle);
+
+      return dGroup;
+    }
+
+    const leftDoor = createSlidingDoor(true);
+    const leftClosedX = -0.605;
+    leftDoor.position.x = leftClosedX;
+
+    const rightDoor = createSlidingDoor(false);
+    const rightClosedX = 0.705;
+    rightDoor.position.x = rightClosedX;
+
+    machine.add(leftDoor, rightDoor);
+
+    // 7. Top Roof Z-Axis Bridge Column Housing, Cable Drag Chains & Vent Box
+    const topHousingGroup = new THREE.Group();
+    const zBoxLeft = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.52, 0.95), matDarkBase);
+    zBoxLeft.position.set(-1.25, 2.38, -0.15);
+    zBoxLeft.castShadow = true;
+    topHousingGroup.add(zBoxLeft);
+
+    const zBoxRight = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.52, 0.95), matDarkBase);
+    zBoxRight.position.set(-0.58, 2.38, -0.15);
+    zBoxRight.castShadow = true;
+    topHousingGroup.add(zBoxRight);
+
+    // Central Spindle Servo Motor & Curved Black Cable Drag Chains
+    const zServo = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.65, 0.22), matCharcoal);
+    zServo.position.set(-0.915, 2.45, 0.15);
+    topHousingGroup.add(zServo);
+
+    [-1.12, -0.72].forEach(cx => {
+      const chainArc = new THREE.Mesh(
+        new THREE.TorusGeometry(0.18, 0.045, 10, 20, Math.PI),
+        matCharcoal
+      );
+      chainArc.position.set(cx, 2.64, -0.05);
+      chainArc.rotation.y = Math.PI / 2;
+      topHousingGroup.add(chainArc);
+    });
+
+    // Right Top White Louvered Vent Box
+    const topVentBox = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.34, 0.38), matWhite);
+    topVentBox.position.set(1.68, 2.34, -0.45);
+    topHousingGroup.add(topVentBox);
+
+    const ventGrille = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.26, 0.26), matCharcoal);
+    ventGrille.position.set(1.872, 2.34, -0.45);
+    topHousingGroup.add(ventGrille);
+
+    machine.add(topHousingGroup);
+
+    // 8. Overhead Swivel Arm & CNC Operator Control Pendant (Right Front Column)
+    const pendantGroup = new THREE.Group();
+    // Vertical post rising near right column
+    const armPost = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.55, 16), matSteel);
+    armPost.position.set(1.38, 2.32, 0.88);
+    pendantGroup.add(armPost);
+
+    // Horizontal swivel boom coming forward
+    const armBoom = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.62), matSteel);
+    armBoom.position.set(1.38, 2.56, 1.15);
+    pendantGroup.add(armBoom);
+
+    // Vertical drop tube into pendant top
+    const armDrop = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.72, 16), matSteel);
+    armDrop.position.set(1.38, 2.22, 1.42);
+    pendantGroup.add(armDrop);
+
+    // Operator Pendant Box
+    const ctrlBox = new THREE.Group();
+    ctrlBox.position.set(1.52, 1.62, 1.42);
+    ctrlBox.rotation.y = -0.22;
+
+    const pBody = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.68, 0.16), matDoorGrey);
+    pBody.castShadow = true;
+    ctrlBox.add(pBody);
+
+    const pScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.64), matPendantFace);
+    pScreen.position.z = 0.082;
+    ctrlBox.add(pScreen);
+
+    // Black hanging cable loop below pendant
+    const cableLoop = new THREE.Mesh(
+      new THREE.TorusGeometry(0.12, 0.012, 8, 20, Math.PI),
+      matCharcoal
+    );
+    cableLoop.position.set(0.18, -0.34, -0.02);
+    cableLoop.rotation.x = Math.PI;
+    ctrlBox.add(cableLoop);
+
+    pendantGroup.add(ctrlBox);
+    machine.add(pendantGroup);
+
+    // 9. Right-End Chip Conveyor & Trapezoidal Wheeled Chip Bin (Permanent Default)
+    const chipGroup = new THREE.Group();
+    chipGroup.position.set(2.4, 0, 0);
+
+    // Low horizontal conveyor base track
+    const convTrack = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.26, 0.56), matDarkBase);
+    convTrack.position.set(0.45, 0.18, 0.15);
+    convTrack.castShadow = true;
+    chipGroup.add(convTrack);
+
+    // Inclined elevator chute
+    const convInclined = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.28, 0.54), matDarkBase);
+    convInclined.position.set(0.32, 0.52, 0.15);
+    convInclined.rotation.z = 0.68;
+    convInclined.castShadow = true;
+    chipGroup.add(convInclined);
+
+    // Top discharge hood with silver warning plate
+    const convHood = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.26, 0.58), matDarkBase);
+    convHood.position.set(0.68, 0.78, 0.15);
+    convHood.castShadow = true;
+    chipGroup.add(convHood);
+
+    const hoodBadge = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.08), matStainless);
+    hoodBadge.position.set(1.022, 0.76, 0.15);
+    hoodBadge.rotation.y = Math.PI / 2;
+    chipGroup.add(hoodBadge);
+
+    // Trapezoidal Wheeled Chip Cart in Front of Chute
+    const cartGroup = new THREE.Group();
+    cartGroup.position.set(0.75, 0.36, 0.68);
+
+    const cartBody = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.52, 0.68), matDarkBase);
+    cartBody.castShadow = true;
+    cartGroup.add(cartBody);
+
+    // Angled front hopper lip
+    const cartFront = new THREE.Mesh(new THREE.BoxGeometry(0.71, 0.48, 0.25), matDarkBase);
+    cartFront.position.set(0, 0.02, 0.32);
+    cartFront.rotation.x = -0.35;
+    cartGroup.add(cartFront);
+
+    // Chip cart dark interior cavity
+    const cartInside = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.05, 0.62), matCharcoal);
+    cartInside.position.set(0, 0.245, 0.04);
+    cartGroup.add(cartInside);
+
+    // Push handle bar & 4 caster wheels
+    const cartHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.68, 12), matCharcoal);
+    cartHandle.rotation.x = Math.PI / 2;
+    cartHandle.position.set(0.42, 0.18, 0);
+    cartGroup.add(cartHandle);
+
+    [[-0.28, -0.25], [0.28, -0.25], [-0.28, 0.25], [0.28, 0.25]].forEach(([wx, wz]) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.035, 16), matSteel);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(wx, -0.29, wz);
+      cartGroup.add(wheel);
+    });
+
+    chipGroup.add(cartGroup);
+    machine.add(chipGroup);
+
+    // --- UI BUTTONS & ANIMATION ---
+    let doorsOpen = false;
+    let targetDoorSlide = 0;
+
+    const btnDoors = document.getElementById('btnDoors');
+    const btnRotate = document.getElementById('btnRotate');
+    const btnReset = document.getElementById('btnReset');
+
+    btnDoors.addEventListener('click', () => {
+      doorsOpen = !doorsOpen;
+      targetDoorSlide = doorsOpen ? 1.18 : 0; // Slides doors completely behind white columns
+      btnDoors.textContent = doorsOpen ? 'Close Doors' : 'Open Doors';
+      btnDoors.classList.toggle('active', doorsOpen);
+    });
+
+    function updateRotateButton() {
+      btnRotate.textContent = controls.autoRotate ? 'Auto-Rotate: ON' : 'Auto-Rotate: OFF';
+      btnRotate.classList.toggle('active', controls.autoRotate);
+    }
+
+    btnRotate.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      updateRotateButton();
+    });
+
+    btnReset.addEventListener('click', () => {
+      camera.position.copy(defaultCamPos);
+      controls.target.copy(defaultTarget);
+      controls.update();
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      // Smoothly slide double doors behind left and right columns
+      leftDoor.position.x += ((leftClosedX - targetDoorSlide) - leftDoor.position.x) * 0.09;
+      rightDoor.position.x += ((rightClosedX + targetDoorSlide) - rightDoor.position.x) * 0.09;
+
+      // Subtle spindle rotation inside workbay
+      spindleNose.rotation.y += 0.05;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Automatically resize to fit any parent div on your website
+    const resizeObserver = new ResizeObserver(() => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width > 0 && height > 0) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+    });
+    resizeObserver.observe(container);
+  </script>
+</body>
+</html>

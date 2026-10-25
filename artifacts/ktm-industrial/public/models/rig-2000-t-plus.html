@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KTM CNC 360° Product Showcase</title>
+  <style>
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    /* Reset for standalone or iframe use */
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: transparent;
+    }
+
+    /* Main Product Showcase Container - Adjust height/width to fit your website layout */
+    #cnc-3d-showcase {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #eef2f6 100%);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+      user-select: none;
+    }
+
+    /* Top-left 360 Badge */
+    .showcase-badge {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(203, 213, 225, 0.7);
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: 0.4px;
+      pointer-events: none;
+    }
+
+    .showcase-badge span.dot {
+      width: 8px;
+      height: 8px;
+      background: #e61919;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Bottom Floating Product Control Bar */
+    .showcase-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      background: rgba(25, 32, 38, 0.88);
+      backdrop-filter: blur(8px);
+      padding: 6px;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .showcase-btn {
+      background: transparent;
+      color: #f8fafc;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .showcase-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .showcase-btn.active {
+      background: #e61919;
+      color: #ffffff;
+    }
+
+    @media (max-width: 390px) {
+      .showcase-controls { gap: 2px; padding: 4px; bottom: 12px; }
+      .showcase-btn { padding: 7px 9px; font-size: 10px; }
+      .showcase-badge { top: 10px; left: 10px; padding: 7px 10px; font-size: 10px; }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- PRODUCT SHOWCASE COMPONENT -->
+  <div id="cnc-3d-showcase">
+    <div class="showcase-badge">
+      <span class="dot"></span> 360° INTERACTIVE VIEW — DRAG TO ROTATE
+    </div>
+
+    <div class="showcase-controls">
+      <button id="btnDoors" class="showcase-btn">Open Doors</button>
+      <button id="btnRotate" class="showcase-btn active">Auto-Rotate: ON</button>
+      <button id="btnReset" class="showcase-btn">Reset View</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const container = document.getElementById('cnc-3d-showcase');
+
+    // --- SCENE, CAMERA, RENDERER ---
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      100
+    );
+    const defaultCamPos = new THREE.Vector3(5.2, 2.35, 5.8);
+    const defaultTarget = new THREE.Vector3(0.25, 1.1, 0);
+    camera.position.copy(defaultCamPos);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(defaultTarget);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 3.0;
+    controls.maxDistance = 11.0;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02; // Prevent camera from going under the floor
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.2;
+
+    // Pause auto-rotate when the customer interacts with the model
+    controls.addEventListener('start', () => {
+      if (controls.autoRotate) {
+        controls.autoRotate = false;
+        updateRotateButton();
+      }
+    });
+
+    // --- STUDIO LIGHTING ---
+    scene.add(new THREE.AmbientLight(0xffffff, 1.3));
+
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.85);
+    dirLight1.position.set(6, 10, 8);
+    dirLight1.castShadow = true;
+    dirLight1.shadow.mapSize.set(2048, 2048);
+    scene.add(dirLight1);
+
+    const dirLight2 = new THREE.DirectionalLight(0xdbeafe, 0.95);
+    dirLight2.position.set(-7, 6, -6);
+    scene.add(dirLight2);
+
+    // Studio floor shadow catcher
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.ShadowMaterial({ opacity: 0.16 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // --- PROCEDURAL TEXTURES FOR ACCURATE DECALS ---
+    function createBannerTexture(text) {
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 128;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#d91e18';
+      ctx.fillRect(0, 0, 1024, 128);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold italic 68px Arial, sans-serif';
+      ctx.fillText(text, 40, 88);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createKTMLogoTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#232b32';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#0088ff';
+      ctx.beginPath();
+      ctx.moveTo(190, 30);
+      ctx.lineTo(60, 140);
+      ctx.lineTo(125, 145);
+      ctx.lineTo(85, 225);
+      ctx.lineTo(205, 115);
+      ctx.lineTo(145, 110);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 34px Arial';
+      ctx.fillText('KTM', 92, 155);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createControlPanelTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#2b343b';
+      ctx.fillRect(0, 0, 512, 512);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(10, 10, 492, 492);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(32, 32, 310, 220);
+      ctx.fillStyle = '#e0f2fe';
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText('POS  X: 124.500', 48, 70);
+      ctx.fillText('     Z: -45.200', 48, 100);
+      ctx.fillText('RPM: 2400  T0101', 48, 140);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(48, 165, 270, 65);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(356, 32, 124, 220);
+      for (let r = 0; r < 5; r++) {
+        for (let col = 0; col < 3; col++) {
+          ctx.fillStyle = (r === 4 && col === 2) ? '#ef4444' : '#e2e8f0';
+          ctx.fillRect(368 + col * 36, 45 + r * 40, 28, 28);
+        }
+      }
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(32, 270, 448, 210);
+      for (let r = 0; r < 4; r++) {
+        for (let col = 0; col < 8; col++) {
+          ctx.fillStyle = col < 2 ? '#22c55e' : (col === 7 ? '#f97316' : '#94a3b8');
+          ctx.fillRect(48 + col * 52, 290 + r * 42, 36, 28);
+        }
+      }
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath(); ctx.arc(100, 435, 26, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath(); ctx.arc(100, 435, 18, 0, Math.PI * 2); ctx.fill();
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    function createWarningTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 128;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 256, 128);
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(5, 5, 246, 118);
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(15, 15, 70, 98);
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.moveTo(128, 25); ctx.lineTo(95, 95); ctx.lineTo(161, 95); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(175, 25, 60, 14);
+      ctx.fillRect(175, 50, 60, 14);
+      ctx.fillRect(175, 75, 60, 14);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    // --- MATERIALS ---
+    const matCream = new THREE.MeshStandardMaterial({ color: 0xe8e6df, roughness: 0.35, metalness: 0.1 });
+    const matDarkGrey = new THREE.MeshStandardMaterial({ color: 0x232b32, roughness: 0.4, metalness: 0.15 });
+    const matSteel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.2, metalness: 0.85 });
+    const matDarkMetal = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.5, metalness: 0.6 });
+    const matRedBanner = new THREE.MeshStandardMaterial({ map: createBannerTexture('RIG 2000 T+'), roughness: 0.3 });
+    const matKTMLogo = new THREE.MeshStandardMaterial({ map: createKTMLogoTexture(), roughness: 0.35 });
+    const matWarning = new THREE.MeshStandardMaterial({ map: createWarningTexture(), roughness: 0.4 });
+    const matControlFace = new THREE.MeshStandardMaterial({ map: createControlPanelTexture(), roughness: 0.3 });
+    const matGlass = new THREE.MeshPhysicalMaterial({
+      color: 0xdbeafe, transparent: true, opacity: 0.32, roughness: 0.05, metalness: 0.1, transmission: 0.6
+    });
+
+    // --- MACHINE GEOMETRY ---
+    const machine = new THREE.Group();
+    scene.add(machine);
+
+    // 1. Lower Base Bed & Leveling Feet
+    const baseMain = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.58, 1.85), matDarkGrey);
+    baseMain.position.set(0, 0.36, 0);
+    baseMain.castShadow = true;
+    baseMain.receiveShadow = true;
+    machine.add(baseMain);
+
+    const footGeo = new THREE.CylinderGeometry(0.07, 0.09, 0.08, 20);
+    [[-1.65, -0.8], [-0.55, -0.8], [0.55, -0.8], [1.65, -0.8],
+     [-1.65,  0.8], [-0.55,  0.8], [0.55,  0.8], [1.65,  0.8]].forEach(([fx, fz]) => {
+      const foot = new THREE.Mesh(footGeo, matDarkMetal);
+      foot.position.set(fx, 0.04, fz);
+      machine.add(foot);
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.08, 12), matSteel);
+      bolt.position.set(fx, 0.08, fz);
+      machine.add(bolt);
+    });
+
+    // 2. Stainless Steel Trim Ledge
+    const steelTrim = new THREE.Mesh(new THREE.BoxGeometry(3.62, 0.11, 1.88), matSteel);
+    steelTrim.position.set(0, 0.705, 0.02);
+    machine.add(steelTrim);
+
+    // 3. Left Cream Housing & Protruding Motor Shroud
+    const leftCol = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.55, 1.75), matCream);
+    leftCol.position.set(-1.275, 1.53, -0.02);
+    leftCol.castShadow = true;
+    machine.add(leftCol);
+
+    const shroudMain = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.85, 0.95), matCream);
+    shroudMain.position.set(-2.05, 1.48, -0.1);
+    shroudMain.castShadow = true;
+    machine.add(shroudMain);
+
+    const shroudTop = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.25, 0.92), matCream);
+    shroudTop.position.set(-1.98, 1.92, -0.1);
+    shroudTop.rotation.z = -0.35;
+    machine.add(shroudTop);
+
+    // Side Vent & Pressure Gauges
+    const ventPlate = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.42, 0.35), matDarkMetal);
+    ventPlate.position.set(-1.805, 0.98, 0.45);
+    machine.add(ventPlate);
+
+    const gaugeGeo = new THREE.CylinderGeometry(0.038, 0.038, 0.02, 20);
+    [[2.12, 0.55], [2.12, 0.43], [1.98, 0.86], [1.88, 0.86]].forEach(([gy, gz], i) => {
+      const g = new THREE.Mesh(gaugeGeo, matSteel);
+      if (i < 2) {
+        g.rotation.z = Math.PI / 2;
+        g.position.set(-1.805, gy, gz);
+      } else {
+        g.rotation.x = Math.PI / 2;
+        g.position.set(-1.55 + (i - 2) * 0.14, gy, 0.86);
+      }
+      machine.add(g);
+    });
+
+    // 4. Right & Rear Cream Enclosures + Rear Cabinets
+    const rightCol = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.45, 1.75), matCream);
+    rightCol.position.set(1.325, 1.48, -0.02);
+    rightCol.castShadow = true;
+    machine.add(rightCol);
+
+    const rearWall = new THREE.Mesh(new THREE.BoxGeometry(1.65, 1.45, 0.45), matCream);
+    rearWall.position.set(0.05, 1.48, -0.67);
+    rearWall.castShadow = true;
+    machine.add(rearWall);
+
+    const elecCab1 = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.25, 0.18), matCream);
+    elecCab1.position.set(-0.8, 1.45, -0.96);
+    machine.add(elecCab1);
+
+    const elecCab2 = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.25, 0.18), matCream);
+    elecCab2.position.set(0.65, 1.45, -0.96);
+    machine.add(elecCab2);
+
+    // 5. Internal Machining Bay (3-Jaw Chuck & Turret)
+    const innerBack = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.2, 0.04), matSteel);
+    innerBack.position.set(0.05, 1.4, -0.4);
+    machine.add(innerBack);
+
+    const chuckGroup = new THREE.Group();
+    const chuckBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.18, 28), matSteel);
+    chuckBody.rotation.z = Math.PI / 2;
+    chuckGroup.add(chuckBody);
+    for (let j = 0; j < 3; j++) {
+      const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.05), matDarkMetal);
+      const angle = (j * Math.PI * 2) / 3;
+      jaw.position.set(0.09, Math.cos(angle) * 0.13, Math.sin(angle) * 0.13);
+      jaw.rotation.x = -angle;
+      chuckGroup.add(jaw);
+    }
+    chuckGroup.position.set(-0.62, 1.38, 0.1);
+    machine.add(chuckGroup);
+
+    const turret = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.16, 8), matDarkGrey);
+    turret.rotation.z = Math.PI / 2;
+    turret.position.set(0.35, 1.45, 0.05);
+    machine.add(turret);
+
+    // 6. Top Canopy & Red Banner
+    const headerCanopy = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.22, 1.15), matDarkGrey);
+    headerCanopy.position.set(0.05, 2.22, 0.35);
+    machine.add(headerCanopy);
+
+    const redStripe = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.13, 0.02), matRedBanner);
+    redStripe.position.set(0.05, 2.18, 0.925);
+    machine.add(redStripe);
+
+    // 7. Double Sliding Doors
+    function createCNCWindowDoor(isLeft) {
+      const dGroup = new THREE.Group();
+      const sign = isLeft ? -1 : 1;
+
+      const topFrame = new THREE.Mesh(new THREE.BoxGeometry(0.81, 0.16, 0.08), matDarkGrey);
+      topFrame.position.set(0, 2.02, 0.89);
+      dGroup.add(topFrame);
+
+      const botFrame = new THREE.Mesh(new THREE.BoxGeometry(0.81, 0.56, 0.08), matDarkGrey);
+      botFrame.position.set(0, 1.04, 0.89);
+      dGroup.add(botFrame);
+
+      const outerSide = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.62, 0.08), matDarkGrey);
+      outerSide.position.set(sign * 0.295, 1.63, 0.89);
+      dGroup.add(outerSide);
+
+      const innerSide = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 0.08), matDarkGrey);
+      innerSide.position.set(-sign * 0.335, 1.63, 0.89);
+      dGroup.add(innerSide);
+
+      const glassPane = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.62, 0.02), matGlass);
+      glassPane.position.set(-sign * 0.03, 1.63, 0.89);
+      dGroup.add(glassPane);
+
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.36, 16), matSteel);
+      handle.position.set(-sign * 0.33, 1.56, 0.95);
+      dGroup.add(handle);
+
+      const logoPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.24), matKTMLogo);
+      logoPlane.position.set(sign * 0.18, 1.02, 0.932);
+      dGroup.add(logoPlane);
+
+      const warnPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.09), matWarning);
+      warnPlane.position.set(-sign * 0.18, 1.18, 0.932);
+      dGroup.add(warnPlane);
+
+      return dGroup;
+    }
+
+    const leftDoor = createCNCWindowDoor(true);
+    leftDoor.position.x = -0.36;
+    const rightDoor = createCNCWindowDoor(false);
+    rightDoor.position.x = 0.46;
+    machine.add(leftDoor, rightDoor);
+
+    // 8. Overhead Arm & CNC Pendant
+    const armGroup = new THREE.Group();
+    const armRiser = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.45, 0.11), matSteel);
+    armRiser.position.set(0.68, 2.42, 0.35);
+    armGroup.add(armRiser);
+
+    const armHoriz = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.09, 0.72), matSteel);
+    armHoriz.position.set(0.92, 2.62, 0.66);
+    armGroup.add(armHoriz);
+
+    const armDrop = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 16), matSteel);
+    armDrop.position.set(1.16, 2.38, 0.98);
+    armGroup.add(armDrop);
+
+    const pendant = new THREE.Group();
+    pendant.position.set(1.18, 1.85, 1.02);
+    pendant.rotation.y = -0.18;
+    pendant.add(new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.62, 0.18), matDarkGrey));
+
+    const pFace = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.58), matControlFace);
+    pFace.position.z = 0.092;
+    pendant.add(pFace);
+
+    armGroup.add(pendant);
+    machine.add(armGroup);
+
+    // 9. Signal Tower Light
+    const towerGroup = new THREE.Group();
+    towerGroup.position.set(1.38, 2.22, 0.55);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.25, 12), matSteel);
+    pole.position.y = 0.12;
+    towerGroup.add(pole);
+
+    [[0.26, 0x22c55e], [0.32, 0xfacc15], [0.38, 0xef4444]].forEach(([ly, col]) => {
+      const lamp = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.028, 0.055, 16),
+        new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.4, roughness: 0.2 })
+      );
+      lamp.position.y = ly;
+      towerGroup.add(lamp);
+    });
+    machine.add(towerGroup);
+
+    // 10. Permanent Chip Conveyor & Wheeled Chip Bin (Enabled by Default)
+    const chipSystem = new THREE.Group();
+    const chute = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.85, 0.55), matDarkGrey);
+    chute.position.set(1.98, 0.72, 0.15);
+    chute.rotation.z = -0.5;
+    chute.castShadow = true;
+    chipSystem.add(chute);
+
+    const chipBin = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.72, 0.85), matDarkGrey);
+    chipBin.position.set(2.38, 0.48, 0.35);
+    chipBin.castShadow = true;
+    chipSystem.add(chipBin);
+
+    const casterMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+    [[-0.3, -0.35], [0.3, -0.35], [-0.3, 0.35], [0.3, 0.35]].forEach(([cx, cz]) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.04, 16), casterMat);
+      wheel.rotation.x = Math.PI / 2;
+      wheel.position.set(2.38 + cx, 0.06, 0.35 + cz);
+      chipSystem.add(wheel);
+    });
+    machine.add(chipSystem);
+
+    // --- PRODUCT SHOWCASE CONTROLS ---
+    let doorsOpen = false;
+    let targetDoorOffset = 0;
+
+    const btnDoors = document.getElementById('btnDoors');
+    const btnRotate = document.getElementById('btnRotate');
+    const btnReset = document.getElementById('btnReset');
+
+    btnDoors.addEventListener('click', () => {
+      doorsOpen = !doorsOpen;
+      targetDoorOffset = doorsOpen ? 0.52 : 0;
+      btnDoors.textContent = doorsOpen ? 'Close Doors' : 'Open Doors';
+      btnDoors.classList.toggle('active', doorsOpen);
+    });
+
+    function updateRotateButton() {
+      btnRotate.textContent = controls.autoRotate ? 'Auto-Rotate: ON' : 'Auto-Rotate: OFF';
+      btnRotate.classList.toggle('active', controls.autoRotate);
+    }
+
+    btnRotate.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      updateRotateButton();
+    });
+
+    btnReset.addEventListener('click', () => {
+      camera.position.copy(defaultCamPos);
+      controls.target.copy(defaultTarget);
+      controls.update();
+    });
+
+    // --- ANIMATION & CONTAINER RESIZE OBSERVER ---
+    function animate() {
+      requestAnimationFrame(animate);
+      leftDoor.position.x += ((-0.36 - targetDoorOffset) - leftDoor.position.x) * 0.1;
+      rightDoor.position.x += ((0.46 + targetDoorOffset) - rightDoor.position.x) * 0.1;
+      chuckGroup.rotation.x += 0.03;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Automatically resize whenever the parent website container changes dimensions
+    const resizeObserver = new ResizeObserver(() => {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (width > 0 && height > 0) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+    });
+    resizeObserver.observe(container);
+  </script>
+</body>
+</html>
